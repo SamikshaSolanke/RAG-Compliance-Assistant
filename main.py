@@ -32,7 +32,7 @@ app = FastAPI(
 )
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
-AUTH_KEY = "84ae11520a9ef092d711f960ce31d92fc90a47b0f38aa3202fe16ac543ef9871"
+AUTH_KEY = "KEY"
 security_scheme = HTTPBearer()
 
 def custom_openapi():
