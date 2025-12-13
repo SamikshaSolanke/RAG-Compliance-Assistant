@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal AI Assistant - Insurance QA</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Legal AI Assistant</h1>
+            <p>Insurance Policy Question & Answer System</p>
+            <p class="subtitle">Supports English, Hindi & Marathi</p>
+        </header>
+
+        <div class="main-content">
+            <form id="qaForm" enctype="multipart/form-data">
+                <!-- File Upload Section -->
+                <div class="form-section">
+                    <label for="fileUpload">
+                        <span class="label-icon"></span>
+                        Upload Document
+                    </label>
+                    <div class="file-upload-wrapper">
+                        <input 
+                            type="file" 
+                            id="fileUpload" 
+                            name="file" 
+                            accept=".pdf,.docx,.txt"
+                            required
+                        >
+                        <div class="file-info" id="fileInfo">
+                            <span class="placeholder">Choose a PDF, DOCX, or TXT file</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Questions Section -->
+                <div class="form-section">
+                    <label for="questions">
+                        <span class="label-icon"></span>
+                        Enter Questions (one per line)
+                    </label>
+                    <textarea 
+                        id="questions" 
+                        name="questions" 
+                        rows="8" 
+                        placeholder="Example:&#10;What is the coverage amount?&#10;What are the exclusions?&#10;What is the claim process?"
+                        required
+                    ></textarea>
+                    <div class="question-count" id="questionCount">0 questions</div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="submitBtn" class="submit-btn">
+                    <span class="btn-text">Get Answers</span>
+                    <span class="btn-loading" style="display: none;">Processing...</span>
+                </button>
+            </form>
+
+            <!-- Results Section -->
+            <div id="results" class="results-section" style="display: none;">
+                <h2>Results</h2>
+                <div id="answersContainer"></div>
+            </div>
+
+            <!-- Error Section -->
+            <div id="error" class="error-section" style="display: none;">
+                <h3>⚠️ Error</h3>
+                <p id="errorMessage"></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
