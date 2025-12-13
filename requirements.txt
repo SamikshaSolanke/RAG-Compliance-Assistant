@@ -1,27 +1,17 @@
-# --- Core FastAPI Dependencies ---
 fastapi
 uvicorn
-
-# --- Document Handling ---
-PyMuPDF       # for PDF (fitz)
-python-docx            # for .docx
-extract-msg            # for .msg
-beautifulsoup4         # for .eml HTML parsing
-requests               # for downloading URLs
-python-dotenv          # for .env
-
-# --- LangChain + Gemini + Vector Store ---
+PyMuPDF      
+python-docx
+python-multipart           
+extract-msg          
+beautifulsoup4         
+requests
+python-dotenv   
 langchain
 langchain-google-genai
 sentence-transformers
 torch
 faiss-cpu
 langchain-community
-
-# use faiss-gpu if running on GPU
-
-# --- Security / Token Auth (optional, already covered in FastAPI) ---
-httpx                  # (used by LangChain or Gemini clients)
-
-# --- Optional: for compatibility warnings/info ---
+httpx           
 tqdm
