@@ -1,47 +1,118 @@
 # llm.py
 
-import os
-from dotenv import load_dotenv
 from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
 from langchain_groq import ChatGroq
+from langchain_core.runnables import RunnableSequence
 
-load_dotenv()
+GROQ_API_KEY = "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"
 
-# Load API key
-GROQ_API_KEY = "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"
-
-# Initialize Groq LLaMA 3 model (via LangChain's OpenAI-compatible wrapper)
-llm = ChatGroq(
-    model_name="gemma2-9b-it",  # or "llama3-8b-8192" for lighter version
+answer_llm = ChatGroq(
+    model_name="llama-3.1-8b-instant",
     groq_api_key=GROQ_API_KEY,
-    temperature=0.3,
-    max_tokens=50
+    temperature=0.2,
+    max_tokens=180,
 )
 
-# Insurance-specific prompt template
-prompt_template = PromptTemplate(
-    template= """
-    You are an expert AI assistant trained to extract and summarize detailed information from insurance policy documents.
-    Your goal is to answer the user's QUESTION using only the provided CONTEXT. Follow these rules:
-    Guidelines:
-    Base your answer strictly on the CONTEXT.
-    Aim for 30-40 words per answer
-    Use formal policy language where applicable (e.g., “shall indemnify”, “subject to”, “provided that”).
-    Each answer should be a complete, self-contained clause: detailed enough to capture eligibility, limits, waiting periods, conditions, and exceptions — but without becoming overly verbose or repetitive.
-    If multiple distinct points are found, return them as separate items in the list.
-    If the CONTEXT does not provide relevant information, return:
-    Don't add any additional comments of your own stick to the answer itself.
-    —
-    📄 CONTEXT:
-    {context}
-    ❓ QUESTION:
-    {question}
-    —
-    """
-    )
+translation_llm = ChatGroq(
+    model_name="llama-3.1-8b-instant",
+    groq_api_key=GROQ_API_KEY,
+    temperature=0.1,
+    max_tokens=180,
+)
 
-# Build LangChain-compatible chain
+answer_prompt = PromptTemplate(
+    input_variables=["context", "question"],
+    template="""
+    You are an expert assistant specialized in extracting answers from insurance policy documents.
+
+    STRICT RULES:
+    - Answer ONLY in **English**
+    - Use only the information from CONTEXT
+    - Write 30–40 words
+    - Use formal policy language ("shall indemnify", "subject to", etc.)
+    - If the context does not contain the answer, respond exactly:
+      No relevant policy information found.
+
+    CONTEXT:
+    {context}
+
+    QUESTION (respond in English only):
+    {question}
+    """
+)
+
+answer_chain = answer_prompt | answer_llm
+
 def get_llm_answer(question: str, context: str) -> str:
-    chain = LLMChain(llm=llm, prompt=prompt_template)
-    return chain.run(context=context, question=question)
+    response = answer_chain.invoke({"context": context, "question": question})
+    return response.content.strip()
+
+lang_prompt = PromptTemplate(
+    input_variables=["text"],
+    template="""
+    Detect the language of this text. Answer ONLY one word:
+    English, Hindi, or Marathi.
+
+    TEXT:
+    {text}
+    """
+)
+
+lang_chain = lang_prompt | translation_llm
+
+
+def detect_language(text: str) -> str:
+    response = lang_chain.invoke({"text": text})
+    lang = response.content.strip().lower()
+
+    if "hindi" in lang:
+        return "Hindi"
+    if "marathi" in lang:
+        return "Marathi"
+    return "English"
+
+to_eng_prompt = PromptTemplate(
+    input_variables=["text"],
+    template="""
+    Translate the following text into **English only**.
+    Keep the meaning unchanged.
+    TEXT:
+    {text}
+    """
+)
+
+to_eng_chain = to_eng_prompt | translation_llm
+
+
+def translate_to_english(text: str) -> str:
+    response = to_eng_chain.invoke({"text": text})
+    return response.content.strip()
+
+to_user_prompt = PromptTemplate(
+    input_variables=["text", "lang"],
+    template="""
+    Translate the following English text into {lang}.
+    Provide **only** the translated output:
+    {text}
+    """
+)
+
+to_user_chain = to_user_prompt | translation_llm
+
+def translate_answer(text: str, target_language: str) -> str:
+    english_clean = translate_to_english(text)
+    if target_language == "English":
+        return english_clean
+    
+    translated = to_user_chain.invoke({
+        "text": english_clean,
+        "lang": target_language
+    }).content.strip()
+
+    return f"""
+**{target_language} Translation:**  
+{translated}
+
+**English Version:**  
+{english_clean}
+""".strip()
